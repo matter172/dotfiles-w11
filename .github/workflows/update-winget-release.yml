@@ -32,7 +32,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ steps.winget.outputs.tag }}"
-          STATUS=$(curl -fsSL -o /dev/null -w "%{http_code}" \
+          # Note: -sSL without -f so a 404 doesn't crash the step —
+          # we use the HTTP status code ourselves to decide what to do.
+          STATUS=$(curl -sSL -o /dev/null -w "%{http_code}" \
             -H "Authorization: Bearer $GH_TOKEN" \
             "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG")
 
