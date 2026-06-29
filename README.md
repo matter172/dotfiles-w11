@@ -36,6 +36,7 @@ Apps installed:
 | Brave Browser | WinGet `Brave.Brave` |
 | NVCleanstall | WinGet `TechPowerUp.NVCleanstall` |
 | Valorant (Asia) | WinGet `RiotGames.Valorant.AP` |
+| PowerToys | WinGet `Microsoft.PowerToys` |
 
 ---
 
