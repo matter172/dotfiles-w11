@@ -2,11 +2,11 @@
 
 WinGet installer for **Windows IoT Enterprise LTSC** — editions that ship without the Microsoft Store and therefore can't install WinGet the normal way.
 
-A GitHub Actions workflow automatically tracks the latest WinGet release, bundles all required dependencies, and publishes them as a single GitHub Release. A PowerShell script then downloads and installs everything in one shot.
+A GitHub Actions workflow automatically tracks the latest WinGet release, bundles all required dependencies, and publishes them as a single GitHub Release. Two PowerShell scripts handle the rest: one installs WinGet itself, the other installs your apps.
 
 ---
 
-## Quick install
+## Step 1 — Install WinGet
 
 Open **PowerShell as Administrator** and run:
 
@@ -14,17 +14,29 @@ Open **PowerShell as Administrator** and run:
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/matter172/dotfiles-w11/main/Install-WinGet.ps1)))
 ```
 
-That's it. The script will:
-1. Detect your architecture (x64 or arm64) automatically
-2. Fetch the latest release assets from this repo
-3. Download them to a temp folder
-4. Install VCLibs → UI.Xaml → WinGet in the correct order
-5. Provision WinGet with the license file
-6. Clean up the temp folder
+**Then restart PowerShell** before continuing.
 
 ---
 
-## What gets installed
+## Step 2 — Install Apps
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/matter172/dotfiles-w11/main/Install-WinGet-Apps.ps1)))
+```
+
+Apps installed:
+
+| App | WinGet ID |
+|---|---|
+| Steam | `Valve.Steam` |
+| Epic Games Launcher | `EpicGames.EpicGamesLauncher` |
+| Discord | `Discord.Discord` |
+| Brave Browser | `Brave.Brave` |
+| NVCleanstall | `TechPowerUp.NVCleanstall` |
+
+---
+
+## What gets installed by Step 1
 
 | File | Purpose |
 |---|---|
@@ -52,15 +64,3 @@ That's it. The script will:
 - Windows 10/11 IoT Enterprise LTSC (or any Windows without the Store)
 - PowerShell running as Administrator
 - Internet access to reach GitHub
-
----
-
-## Manual usage
-
-```powershell
-# Auto-detect architecture (default)
-.\Install-WinGet.ps1
-
-# Force a specific architecture
-.\Install-WinGet.ps1 -Architecture arm64
-```
