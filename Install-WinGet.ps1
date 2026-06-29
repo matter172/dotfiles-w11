@@ -20,12 +20,12 @@
     .\Install-WinGet.ps1
 
 .EXAMPLE
-    .\Install-WinGet.ps1 -Repo "myorg/myrepo" -Architecture arm64
+    .\Install-WinGet.ps1 -Architecture arm64
 #>
 
 param (
-    [string]$Repo = "matter172/dotfiles-w11",   # <-- change this
-    [ValidateSet("x64", "arm64")]
+    [string]$Repo = "matter172/dotfiles-w11",
+    [ValidateSet("x64", "arm64", "")]
     [string]$Architecture = ""
 )
 
