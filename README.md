@@ -28,13 +28,14 @@ Open a **normal PowerShell window (not as Administrator)** and run:
 
 Apps installed:
 
-| App | WinGet ID |
+| App | Source |
 |---|---|
-| Steam | `Valve.Steam` |
-| Epic Games Launcher | `EpicGames.EpicGamesLauncher` |
-| Discord | `Discord.Discord` |
-| Brave Browser | `Brave.Brave` |
-| NVCleanstall | `TechPowerUp.NVCleanstall` |
+| Steam | WinGet `Valve.Steam` |
+| Epic Games Launcher | WinGet `EpicGames.EpicGamesLauncher` |
+| Discord | WinGet `Discord.Discord` |
+| Brave Browser | WinGet `Brave.Brave` |
+| NVCleanstall | WinGet `TechPowerUp.NVCleanstall` |
+| Valorant (Asia) | WinGet `RiotGames.Valorant.AP` |
 
 ---
 
