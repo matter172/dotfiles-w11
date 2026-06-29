@@ -49,11 +49,12 @@ Write-Success "WinGet found: $(winget --version)"
 # ---------------------------------------------------------------------------
 
 $apps = @(
-    @{ id = "Valve.Steam";                  name = "Steam"                }
-    @{ id = "EpicGames.EpicGamesLauncher";  name = "Epic Games Launcher"  }
-    @{ id = "Discord.Discord";              name = "Discord"              }
-    @{ id = "Brave.Brave";                  name = "Brave Browser"        }
-    @{ id = "TechPowerUp.NVCleanstall";     name = "NVCleanstall"         }
+    @{ id = "Valve.Steam";                  name = "Steam"                   }
+    @{ id = "EpicGames.EpicGamesLauncher";  name = "Epic Games Launcher"     }
+    @{ id = "Discord.Discord";              name = "Discord"                 }
+    @{ id = "Brave.Brave";                  name = "Brave Browser"           }
+    @{ id = "TechPowerUp.NVCleanstall";     name = "NVCleanstall"            }
+    @{ id = "RiotGames.Valorant.AP";        name = "Valorant (Asia-Pacific)" }
 )
 
 # ---------------------------------------------------------------------------
