@@ -24,7 +24,7 @@
 #>
 
 param (
-    [string]$Repo = "YOUR_ORG/YOUR_REPO",   # <-- change this
+    [string]$Repo = "matter172/dotfiles-w11",   # <-- change this
     [ValidateSet("x64", "arm64")]
     [string]$Architecture = ""
 )
