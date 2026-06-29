@@ -20,6 +20,8 @@ Open **PowerShell as Administrator** and run:
 
 ## Step 2 — Install Apps
 
+Open a **normal PowerShell window (not as Administrator)** and run:
+
 ```powershell
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/matter172/dotfiles-w11/main/Install-WinGet-Apps.ps1)))
 ```
