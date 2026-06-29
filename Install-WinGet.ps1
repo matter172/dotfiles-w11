@@ -54,8 +54,13 @@ function Install-Appx([string]$Label, [string]$Path) {
         Add-AppxPackage -Path $Path
         Write-Success "$Label installed."
     } catch {
-        Write-Fail "Add-AppxPackage failed for $Label`: $_"
-        throw
+        # 0x80073D06 = higher version already installed — safe to skip
+        if ($_.Exception.Message -match "0x80073D06" -or $_.Exception.Message -match "higher version") {
+            Write-Host "    SKIP: $Label — equal or higher version already installed." -ForegroundColor Yellow
+        } else {
+            Write-Fail "Add-AppxPackage failed for $Label`: $_"
+            throw
+        }
     }
 }
 
@@ -150,8 +155,12 @@ try {
         -LicensePath $licensePath | Out-Null
     Write-Success "WinGet provisioned successfully."
 } catch {
-    Write-Fail "Provisioning failed: $_"
-    throw
+    if ($_.Exception.Message -match "0x80073D06" -or $_.Exception.Message -match "higher version") {
+        Write-Host "    SKIP: WinGet — equal or higher version already provisioned." -ForegroundColor Yellow
+    } else {
+        Write-Fail "Provisioning failed: $_"
+        throw
+    }
 }
 
 # ---------------------------------------------------------------------------
