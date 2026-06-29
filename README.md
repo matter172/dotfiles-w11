@@ -11,7 +11,7 @@ A GitHub Actions workflow automatically tracks the latest WinGet release, bundle
 Open **PowerShell as Administrator** and run:
 
 ```powershell
-irm https://raw.githubusercontent.com/matter172/dotfiles-w11/main/Install-WinGet.ps1 | iex
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/matter172/dotfiles-w11/main/Install-WinGet.ps1)))
 ```
 
 That's it. The script will:
