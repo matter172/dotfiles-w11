@@ -1,0 +1,153 @@
+name: Update WinGet Release Assets
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Every Monday at 06:00 UTC
+  workflow_dispatch:       # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get latest WinGet release info
+        id: winget
+        run: |
+          RELEASE=$(curl -fsSL https://api.github.com/repos/microsoft/winget-cli/releases/latest)
+
+          TAG=$(echo "$RELEASE" | jq -r '.tag_name')
+          MSIX=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | endswith(".msixbundle")) | .browser_download_url')
+          LICENSE=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | endswith("License1.xml")) | .browser_download_url')
+
+          echo "tag=$TAG"           >> "$GITHUB_OUTPUT"
+          echo "msix_url=$MSIX"     >> "$GITHUB_OUTPUT"
+          echo "license_url=$LICENSE" >> "$GITHUB_OUTPUT"
+
+      - name: Check if release already exists
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.winget.outputs.tag }}"
+          STATUS=$(curl -fsSL -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG")
+
+          if [ "$STATUS" = "200" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG already exists — skipping."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG not found — will create."
+          fi
+
+      - name: Get latest Microsoft.UI.Xaml 2.8.x version
+        id: xaml
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          VERSIONS=$(curl -fsSL "https://api.nuget.org/v3-flatcontainer/microsoft.ui.xaml/index.json" \
+            | jq -r '.versions[] | select(startswith("2.8"))' | tail -1)
+          echo "version=$VERSIONS" >> "$GITHUB_OUTPUT"
+          echo "Latest Microsoft.UI.Xaml: $VERSIONS"
+
+      - name: Download all assets
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          mkdir -p assets
+
+          # WinGet msixbundle
+          echo "Downloading WinGet msixbundle..."
+          curl -fsSL -o assets/Microsoft.DesktopAppInstaller.msixbundle \
+            "${{ steps.winget.outputs.msix_url }}"
+
+          # License XML
+          echo "Downloading License1.xml..."
+          curl -fsSL -o assets/License1.xml \
+            "${{ steps.winget.outputs.license_url }}"
+
+          # VCLibs x64
+          echo "Downloading VCLibs x64..."
+          curl -fsSL -o assets/Microsoft.VCLibs.x64.14.00.Desktop.appx \
+            "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx"
+
+          # VCLibs arm64
+          echo "Downloading VCLibs arm64..."
+          curl -fsSL -o assets/Microsoft.VCLibs.arm64.14.00.Desktop.appx \
+            "https://aka.ms/Microsoft.VCLibs.arm64.14.00.Desktop.appx"
+
+          # Microsoft.UI.Xaml NuGet -> extract x64 and arm64 appx
+          XAML_VER="${{ steps.xaml.outputs.version }}"
+          echo "Downloading Microsoft.UI.Xaml $XAML_VER NuGet package..."
+          curl -fsSL -o xaml.zip \
+            "https://www.nuget.org/api/v2/package/Microsoft.UI.Xaml/$XAML_VER"
+
+          unzip -q xaml.zip -d xaml_pkg
+
+          cp "xaml_pkg/tools/AppX/x64/Release/Microsoft.UI.Xaml.2.8.appx" \
+             "assets/Microsoft.UI.Xaml.2.8.x64.appx"
+
+          cp "xaml_pkg/tools/AppX/arm64/Release/Microsoft.UI.Xaml.2.8.appx" \
+             "assets/Microsoft.UI.Xaml.2.8.arm64.appx"
+
+          echo "--- Downloaded assets ---"
+          ls -lh assets/
+
+      - name: Delete previous repo releases (keep only latest)
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASES=$(curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/releases")
+
+          echo "$RELEASES" | jq -r '.[] | "\(.id) \(.tag_name)"' | while read ID TAG; do
+            echo "Deleting release $TAG (id=$ID)..."
+            curl -fsSL -X DELETE \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/${{ github.repository }}/releases/$ID"
+
+            # Delete the tag as well
+            curl -fsSL -X DELETE \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/${{ github.repository }}/git/refs/tags/$TAG" || true
+          done
+
+      - name: Create new release and upload assets
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.winget.outputs.tag }}"
+          XAML_VER="${{ steps.xaml.outputs.version }}"
+
+          # Create release
+          RELEASE=$(curl -fsSL -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/${{ github.repository }}/releases" \
+            -d "{
+              \"tag_name\": \"$TAG\",
+              \"name\": \"WinGet $TAG\",
+              \"body\": \"WinGet $TAG with all dependencies bundled.\n\n**Includes:**\n- \`Microsoft.DesktopAppInstaller.msixbundle\`\n- \`License1.xml\`\n- \`Microsoft.VCLibs.x64.14.00.Desktop.appx\`\n- \`Microsoft.VCLibs.arm64.14.00.Desktop.appx\`\n- \`Microsoft.UI.Xaml.$XAML_VER\` (x64 + arm64)\n\nRun \`Install-WinGet.ps1\` as Administrator to install.\",
+              \"draft\": false,
+              \"prerelease\": false
+            }")
+
+          UPLOAD_URL=$(echo "$RELEASE" | jq -r '.upload_url' | sed 's/{?name,label}//')
+
+          # Upload each file
+          for FILE in assets/*; do
+            NAME=$(basename "$FILE")
+            echo "Uploading $NAME..."
+            curl -fsSL -X POST \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Content-Type: application/octet-stream" \
+              "$UPLOAD_URL?name=$NAME" \
+              --data-binary "@$FILE"
+          done
+
+          echo "Release $TAG published with all assets."
