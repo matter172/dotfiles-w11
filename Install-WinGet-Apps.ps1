@@ -55,6 +55,7 @@ $apps = @(
     @{ id = "Brave.Brave";                  name = "Brave Browser"           }
     @{ id = "TechPowerUp.NVCleanstall";     name = "NVCleanstall"            }
     @{ id = "RiotGames.Valorant.AP";        name = "Valorant (Asia-Pacific)" }
+    @{ id = "Microsoft.PowerToys";          name = "PowerToys"               }
 )
 
 # ---------------------------------------------------------------------------
