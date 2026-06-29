@@ -1,10 +1,12 @@
-#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
     Installs apps via WinGet silently.
 .DESCRIPTION
     Runs after Install-WinGet.ps1. Installs a curated list of apps
     using WinGet with no prompts.
+    NOTE: Run as a normal user, NOT as Administrator.
+          winget installs apps into your user profile — running elevated
+          would install them under the Administrator account instead.
 .EXAMPLE
     .\Install-WinGet-Apps.ps1
 #>
