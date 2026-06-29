@@ -25,7 +25,7 @@
 
 param (
     [string]$Repo = "matter172/dotfiles-w11",
-    [ValidateSet("x64", "arm64", "")]
+    [ValidateSet("x64", "arm64")]
     [string]$Architecture = ""
 )
 
